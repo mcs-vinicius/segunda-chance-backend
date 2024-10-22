@@ -71,8 +71,8 @@ public class UsuarioService {
 		user.setSenha(criptografarSenha(user.getSenha()));
 
 		// persists the object on DB
-		user.setFoto("https://i.imgur.com/I8MfmC8.png");
-		var createdUser = usuarioRepository.save(user);
+		//user.setFoto("https://i.imgur.com/I8MfmC8.png");
+		//var createdUser = usuarioRepository.save(user);
 
 		// maps the createdUser object to a UserDTO object.
 		// It returns the UserDTO object, which represents the newly created user
