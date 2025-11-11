@@ -2,6 +2,8 @@ package com.generation.segundachance.security;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import java.util.Arrays; // Importação adicionada
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+// Importações adicionadas para o CORS
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @SuppressWarnings("deprecation")
 @Configuration
@@ -54,11 +61,46 @@ public class BasicSecurityConfig {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
 
+	/**
+	 * Novo Bean para configurar o CORS globalmente.
+	 * O método filterChain() irá usar este Bean automaticamente
+	 * por causa da chamada .cors(withDefaults()).
+	 */
+	@Bean
+    CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Define as origens permitidas (seu frontend no Vercel e localhost)
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://segunda-chance-pi.vercel.app", 
+            "http://localhost:3000",
+            "http://localhost:5173" 
+        ));
+        
+        // Define os métodos HTTP permitidos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+        
+        // Define os cabeçalhos permitidos (importante para Autorização/JWT)
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Origin", "Accept"));
+        
+        // Permite o envio de credenciais (como cookies ou tokens)
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        
+        // Aplica esta configuração a TODAS as rotas (/**)
+        source.registerCorsConfiguration("/**", configuration);
+        
+        return source;
+    }
+
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
 		http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.csrf(csrf -> csrf.disable()).cors(withDefaults());
+				.csrf(csrf -> csrf.disable())
+				.cors(withDefaults()); // Esta linha agora usará o Bean corsConfigurationSource
 
 		http.authorizeHttpRequests((auth) -> auth.requestMatchers("/usuarios/logar", "/usuarios/cadastrar", "/error/**").permitAll()
 				.requestMatchers("/categorias").permitAll()
